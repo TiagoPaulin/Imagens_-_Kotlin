@@ -1,13 +1,9 @@
 package com.example.processamentodeimagem
 
-import android.content.ContentValues
+import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.os.Environment
-import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -20,13 +16,10 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.processamentodeimagem.databinding.ActivityMainBinding
 import java.io.File
-import java.io.OutputStream
 import java.text.SimpleDateFormat
 import java.util.Locale
-import java.util.Objects
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import android.graphics.BitmapFactory
 
 class MainActivity : AppCompatActivity() {
 
@@ -100,9 +93,10 @@ class MainActivity : AppCompatActivity() {
                     val msg = "Foto salva"
                     Toast.makeText(this@MainActivity, "${msg} ${savedUri}", Toast.LENGTH_LONG).show()
 
-                    //salvando a imagem na galeria
-                    var bitmap : Bitmap? = fileToBitmap(photoFIle)
-                    saveImageToGallery(bitmap)
+                    val intent = Intent(this@MainActivity, Edicao::class.java)
+                    intent.putExtra("Path", photoFIle.absolutePath)
+                    startActivity(intent)
+
                 }
 
                 override fun onError(exception: ImageCaptureException) {
@@ -184,39 +178,4 @@ class MainActivity : AppCompatActivity() {
         cameraExecutor.shutdown()
     }
 
-
-    fun fileToBitmap(file: File): Bitmap? {
-        // Verificar se o arquivo existe
-        if (!file.exists()) {
-            return null
-        }
-
-        // Carregar o bitmap do arquivo usando BitmapFactory
-        return BitmapFactory.decodeFile(file.absolutePath)
-    }
-
-    private fun saveImageToGallery(bitmap: Bitmap?){
-
-        val fos: OutputStream
-
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
-                val resolver = contentResolver
-                val contentValues =  ContentValues()
-
-                contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, "Image"+".jpg")
-                contentValues.put(MediaStore. MediaColumns.MIME_TYPE, "image/jpg")
-                contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES+ File.separator+"TestFolder")
-
-                val imageUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,contentValues)
-
-                fos = resolver.openOutputStream(Objects.requireNonNull(imageUri)!!)!!
-                bitmap?.compress(Bitmap.CompressFormat.JPEG, 100, fos)
-                Objects.requireNonNull<OutputStream?>(fos)
-                Toast.makeText(this, "Image Saved", Toast.LENGTH_SHORT).show()
-            }
-        }catch (e: Exception){
-            Toast.makeText(this, "Image Not Saved", Toast.LENGTH_SHORT).show()
-        }
-    }
 }
